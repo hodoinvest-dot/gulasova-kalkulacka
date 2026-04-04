@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gulášová kalkulačka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fire: #C84B11;
+    --fire-light: #E8621A;
+    --ember: #F5A623;
+    --cream: #FDF6ED;
+    --cream-dark: #F5E8D0;
+    --brown-dark: #2C1A0E;
+    --brown-mid: #5C3A1E;
+    --brown-light: #8B5A2B;
+    --text: #1E0E04;
+    --text-muted: #7A5C42;
+    --border: rgba(139,90,43,0.2);
+    --radius: 14px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* Texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(200,75,17,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(245,166,35,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  .page-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-top: 1rem;
+  }
+
+  .flame-icon {
+    display: inline-block;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 1rem;
+  }
+
+  .page-header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2rem, 6vw, 3rem);
+    font-weight: 900;
+    color: var(--brown-dark);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header h1 span {
+    color: var(--fire);
+  }
+
+  .page-header p {
+    font-size: 15px;
+    color: var(--text-muted);
+    font-weight: 300;
+    margin-top: 0.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* CARD */
+  .card {
+    background: #fff;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--fire);
+    margin-bottom: 1.25rem;
+  }
+
+  /* TYPE TABS */
+  .type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 0;
+  }
+
+  .type-btn {
+    padding: 12px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--cream);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all .2s ease;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .type-btn .icon {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  .type-btn:hover {
+    border-color: var(--brown-light);
+    color: var(--brown-mid);
+  }
+
+  .type-btn.active {
+    background: var(--fire);
+    border-color: var(--fire);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* INPUTS */
+  .input-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .input-row:last-child { border-bottom: none; }
+
+  .input-label {
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .input-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .stepper {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--cream);
+  }
+
+  .stepper button {
+    width: 38px;
+    height: 42px;
+    background: none;
+    border: none;
+    color: var(--brown-light);
+    font-size: 18px;
+    cursor: pointer;
+    transition: background .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stepper button:hover { background: var(--cream-dark); }
+  .stepper button:active { background: rgba(200,75,17,0.1); color: var(--fire); }
+
+  .stepper input {
+    width: 70px;
+    height: 42px;
+    border: none;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    background: #fff;
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    -moz-appearance: textfield;
+    outline: none;
+  }
+
+  .stepper input::-webkit-outer-spin-button,
+  .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* RESULTS */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    .metrics-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .metric {
+    background: var(--cream);
+    border-radius: 10px;
+    padding: 12px 10px;
+    text-align: center;
+  }
+
+  .metric-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--brown-dark);
+    line-height: 1;
+  }
+
+  .metric-num .unit {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    margin-left: 2px;
+  }
+
+  .metric-name {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-top: 4px;
+  }
+
+  /* TABLE */
+  .ing-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .ing-table thead tr {
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .ing-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding: 0 0 10px;
+  }
+
+  .ing-table th:last-child { text-align: right; }
+
+  .ing-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .ing-table td:last-child {
+    text-align: right;
+    font-weight: 500;
+    color: var(--brown-mid);
+  }
+
+  .ing-table tr:last-child td { border-bottom: none; }
+
+  .ing-main td { font-weight: 500; color: var(--brown-dark); }
+  .ing-main td:last-child { color: var(--fire); }
+
+  /* TIP */
+  .tip-box {
+    margin-top: 1.5rem;
+    background: linear-gradient(135deg, #FFF8F0 0%, #FFF0E0 100%);
+    border-left: 3px solid var(--ember);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 16px;
+    font-size: 13.5px;
+    color: var(--brown-mid);
+    line-height: 1.65;
+    font-style: italic;
+  }
+
+  .tip-box strong {
+    font-style: normal;
+    font-weight: 500;
+    color: var(--brown-dark);
+    display: block;
+    margin-bottom: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 12px;
+    color: var(--text-muted);
+    opacity: 0.7;
+  }
+
+  /* Fade in on load */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card { animation: fadeUp .4s ease both; }
+  .card:nth-child(1) { animation-delay: 0s; }
+  .card:nth-child(2) { animation-delay: .07s; }
+  .card:nth-child(3) { animation-delay: .14s; }
+  .page-header { animation: fadeUp .3s ease both; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header class="page-header">
+    <svg class="flame-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M24 4C24 4 14 16 14 26C14 32 18.5 37 24 37C29.5 37 34 32 34 26C34 16 24 4 24 4Z" fill="#C84B11"/>
+      <path d="M24 14C24 14 18 22 18 28C18 31.3 20.7 34 24 34C27.3 34 30 31.3 30 28C30 22 24 14 24 14Z" fill="#F5A623"/>
+      <path d="M24 22C24 22 21 26 21 29C21 30.7 22.3 32 24 32C25.7 32 27 30.7 27 29C27 26 24 22 24 22Z" fill="#FDF6ED"/>
+    </svg>
+    <h1>Gulášová<br><span>kalkulačka</span></h1>
+    <p>Prepočet ingrediencií na presný počet porcií</p>
+  </header>
+
+  <!-- TYP GULASA -->
+  <div class="card">
+    <div class="card-title">Typ guláša</div>
+    <div class="type-grid" id="type-grid">
+      <button class="type-btn active" data-type="klasicky" onclick="setType(this)">
+        <span class="icon">🐂</span>Klasický hovädzí
+      </button>
+      <button class="type-btn" data-type="bravcovy" onclick="setType(this)">
+        <span class="icon">🐷</span>Bravčový
+      </button>
+      <button class="type-btn" data-type="zverina" onclick="setType(this)">
+        <span class="icon">🦌</span>Zverina
+      </button>
+      <button class="type-btn" data-type="veganski" onclick="setType(this)">
+        <span class="icon">🌿</span>Vegánsky
+      </button>
+    </div>
+  </div>
+
+  <!-- NASTAVENIA -->
+  <div class="card">
+    <div class="card-title">Nastavenia</div>
+
+    <div class="input-row">
+      <div>
+        <div class="input-label">Počet porcií</div>
+        <div class="input-hint">Celkový počet hostí</div>
+      </div>
+      <div class="stepper">
+        <button type="button" onclick="adj('people',-5)">−</button>
+        <input type="number" id="people" value="10" min="1" max="500" oninput="calc()">
+        <button type="button" onclick="adj('people',5)">+</button>
+      </div>
+    </div>
+
+    <div class="input-row">
+      <div>
+        <div class="input-label">Veľkosť porcie</div>
+        <div class="input-hint">Objem jednej porcie v ml</div>
+      </div>
+      <div class="stepper">
+        <button type="button" onclick="adj('portion',-50)">−</button>
+        <input type="number" id="portion" value="350" min="150" max="600" oninput="calc()">
+        <button type="button" onclick="adj('portion',50)">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VYSLEDKY -->
+  <div class="card">
+    <div class="card-title">Výsledky</div>
+
+    <div class="metrics-row">
+      <div class="metric">
+        <div class="metric-num" id="r-total">—<span class="unit">l</span></div>
+        <div class="metric-name">Celkový objem</div>
+      </div>
+      <div class="metric">
+        <div class="metric-num" id="r-meat">—<span class="unit">kg</span></div>
+        <div class="metric-name">Mäso / základ</div>
+      </div>
+      <div class="metric">
+        <div class="metric-num" id="r-onion">—<span class="unit">kg</span></div>
+        <div class="metric-name">Cibuľa</div>
+      </div>
+      <div class="metric">
+        <div class="metric-num" id="r-water">—<span class="unit">l</span></div>
+        <div class="metric-name">Vývar / voda</div>
+      </div>
+    </div>
+
+    <table class="ing-table">
+      <thead>
+        <tr>
+          <th>Ingrediencia</th>
+          <th>Množstvo</th>
+        </tr>
+      </thead>
+      <tbody id="ing-body"></tbody>
+    </table>
+
+    <div class="tip-box" id="tip-box">
+      <strong>Kuchársky tip</strong>
+      <span id="tip-text"></span>
+    </div>
+  </div>
+
+  <div class="footer">Gulášová centrála &mdash; kalkulačka ingrediencií</div>
+
+</div>
+
+<script>
+const RECIPES = {
+  klasicky: {
+    meatLabel: "Hovädzie (pliecko / kríž)",
+    perLiter: {
+      meat: 0.28, onion: 0.22, water: 0.85,
+      extras: [
+        {n:"Paradajkový pretlak", v:0.040, u:"kg"},
+        {n:"Paprika mletá sladká",  v:6,     u:"g"},
+        {n:"Paprika mletá pálivá",  v:2,     u:"g"},
+        {n:"Rasca celá",            v:3,     u:"g"},
+        {n:"Cesnak",                v:2,     u:"strúčiky"},
+        {n:"Olej / masť",           v:0.030, u:"l"},
+        {n:"Soľ, čierne korenie",   v:null,  u:"podľa chuti"},
+      ]
+    },
+    tip: "Cibuľu opraž na masti alebo oleji úplne dozlatista – to je základ chuti. Mäso nakrájaj na kocky 3×3 cm a opečie ho na vysokej teplote pred dusením."
+  },
+  bravcovy: {
+    meatLabel: "Bravčové (krkovička / pliecko)",
+    perLiter: {
+      meat: 0.26, onion: 0.20, water: 0.80,
+      extras: [
+        {n:"Červená paprika čerstvá", v:0.05,  u:"kg"},
+        {n:"Paradajkový pretlak",     v:0.035, u:"kg"},
+        {n:"Paprika mletá",           v:6,     u:"g"},
+        {n:"Majorán",                 v:3,     u:"g"},
+        {n:"Cesnak",                  v:2,     u:"strúčiky"},
+        {n:"Olej",                    v:0.03,  u:"l"},
+        {n:"Soľ, čierne korenie",     v:null,  u:"podľa chuti"},
+      ]
+    },
+    tip: "Bravčové sa varí rýchlejšie ako hovädzie — postačí 1–1,5 hod. dusenia. Červená čerstvá paprika pridá farbu a sladkosť."
+  },
+  zverina: {
+    meatLabel: "Zverina (jeleň, diviak, srnec)",
+    perLiter: {
+      meat: 0.30, onion: 0.20, water: 0.90,
+      extras: [
+        {n:"Červené víno",       v:0.08, u:"l"},
+        {n:"Brusnicový džem",    v:0.03, u:"kg"},
+        {n:"Bobkový list",       v:1,    u:"ks"},
+        {n:"Nové korenie",       v:3,    u:"ks"},
+        {n:"Cesnak",             v:3,    u:"strúčiky"},
+        {n:"Tymian čerstvý",     v:3,    u:"g"},
+        {n:"Olej / slanina",     v:0.03, u:"l"},
+      ]
+    },
+    tip: "Zverinu odporúčam marinovať 24 hodín v červenom víne s bylinkami. Víno pridaj aj počas varenia — dá mäsu hĺbku a odstraňuje divokú vôňu."
+  },
+  veganski: {
+    meatLabel: "Seitan / šampiňóny / šošovica",
+    perLiter: {
+      meat: 0.22, onion: 0.25, water: 0.88,
+      extras: [
+        {n:"Červená paprika",         v:0.07, u:"kg"},
+        {n:"Paradajky lúpané (plech)",v:0.08, u:"kg"},
+        {n:"Paprika mletá sladká",    v:7,    u:"g"},
+        {n:"Kmín (rímska rasca)",     v:3,    u:"g"},
+        {n:"Cesnak",                  v:3,    u:"strúčiky"},
+        {n:"Olej",                    v:0.03, u:"l"},
+        {n:"Soľ, čierne korenie",     v:null, u:"podľa chuti"},
+      ]
+    },
+    tip: "Seitan pridaj až v posledných 20 minútach, aby sa nerozpadol. Sušené šampiňóny dajú guláši prirodzenú umami hĺbku."
+  }
+};
+
+let currentType = "klasicky";
+
+function setType(btn) {
+  document.querySelectorAll(".type-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  currentType = btn.dataset.type;
+  calc();
+}
+
+function adj(id, delta) {
+  const el = document.getElementById(id);
+  const limits = id === "people" ? [1, 500] : [150, 600];
+  el.value = Math.max(limits[0], Math.min(limits[1], (parseInt(el.value) || 0) + delta));
+  calc();
+}
+
+function fmt(v, dec) {
+  if (v === null) return "—";
+  const n = parseFloat(v.toFixed(dec));
+  return n % 1 === 0 ? n.toString() : n.toString();
+}
+
+function calc() {
+  const people  = Math.max(1, parseInt(document.getElementById("people").value)  || 1);
+  const portion = Math.max(150, parseInt(document.getElementById("portion").value) || 350);
+  const r   = RECIPES[currentType];
+  const pl  = r.perLiter;
+  const lit = (people * portion) / 1000;
+
+  const meat  = lit * pl.meat;
+  const onion = lit * pl.onion;
+  const water = lit * pl.water;
+
+  const setM = (id, val, unit, dec) => {
+    document.getElementById(id).innerHTML =
+      fmt(val, dec) + `<span class="unit">${unit}</span>`;
+  };
+
+  setM("r-total", lit,   "l",  1);
+  setM("r-meat",  meat,  "kg", 2);
+  setM("r-onion", onion, "kg", 2);
+  setM("r-water", water, "l",  1);
+
+  const rows = [
+    {n: r.meatLabel,       v: meat,  u:"kg", dec:2, main:true},
+    {n: "Cibuľa",          v: onion, u:"kg", dec:2, main:true},
+    {n: "Vývar / voda",    v: water, u:"l",  dec:1, main:true},
+  ];
+
+  pl.extras.forEach(e => {
+    if (e.v === null) {
+      rows.push({n: e.n, v: null, u: e.u, dec: 0, main: false});
+    } else {
+      const isCount = ["g","ks","strúčiky"].includes(e.u);
+      const scaled  = lit * e.v;
+      rows.push({n: e.n, v: scaled, u: e.u, dec: isCount ? 0 : 2, main: false});
+    }
+  });
+
+  document.getElementById("ing-body").innerHTML = rows.map(row => {
+    const val = row.v === null ? "—" : fmt(row.v, row.dec) + " " + row.u;
+    const cls = row.main ? ' class="ing-main"' : '';
+    return `<tr${cls}><td>${row.n}</td><td>${val}</td></tr>`;
+  }).join("");
+
+  document.getElementById("tip-text").textContent = RECIPES[currentType].tip;
+}
+
+calc();
+</script>
+</body>
+</html>
