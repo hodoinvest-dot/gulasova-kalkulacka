@@ -1,591 +1,1014 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gulášová kalkulačka</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --fire: #C84B11;
-    --fire-light: #E8621A;
-    --ember: #F5A623;
-    --cream: #FDF6ED;
-    --cream-dark: #F5E8D0;
-    --brown-dark: #2C1A0E;
-    --brown-mid: #5C3A1E;
-    --brown-light: #8B5A2B;
-    --text: #1E0E04;
-    --text-muted: #7A5C42;
-    --border: rgba(139,90,43,0.2);
-    --radius: 14px;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gulášová Kalkulačka</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --gold: #C8A55A;
+      --gold-light: #DDB96A;
+      --dark: #1a1a1a;
+      --dark2: #2a2a2a;
+      --white: #ffffff;
+      --bg: #f0f0ee;
+      --card: #ffffff;
+      --text: #222222;
+      --text-muted: #777;
+      --border: #e0ddd8;
+      --radius: 14px;
+    }
 
-  body {
-    background: var(--cream);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    padding: 2rem 1rem 4rem;
-  }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
 
-  /* Texture overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      radial-gradient(circle at 20% 20%, rgba(200,75,17,0.06) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(245,166,35,0.08) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
+    /* ── HEADER ── */
+    .header {
+      background: var(--dark);
+      padding: 32px 20px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(200,165,90,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(200,165,90,0.4);
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 12px;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--gold);
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .header h1 span { color: #fff; }
+    .header p {
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+      margin-top: 8px;
+    }
 
-  .container {
-    max-width: 680px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
+    /* ── STICKY BAR ── */
+    .sticky-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: var(--dark2);
+      border-bottom: 1px solid rgba(200,165,90,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      z-index: 200;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+    }
+    .sticky-bar.show { transform: translateY(0); }
+    .sticky-name { font-weight: 700; color: #fff; font-size: 14px; }
+    .sticky-info { font-size: 13px; color: var(--gold); font-weight: 600; }
 
-  /* HEADER */
-  .page-header {
-    text-align: center;
-    margin-bottom: 2.5rem;
-    padding-top: 1rem;
-  }
+    /* ── CONTAINER ── */
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 20px 14px;
+    }
 
-  .flame-icon {
-    display: inline-block;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 1rem;
-  }
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 22px 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05);
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      border-left: 3px solid var(--gold);
+      padding-left: 10px;
+      margin-bottom: 18px;
+    }
 
-  .page-header h1 {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(2rem, 6vw, 3rem);
-    font-weight: 900;
-    color: var(--brown-dark);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
+    /* ── SEARCH BOX ── */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 12px;
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 38px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: #fafaf8;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: var(--gold); background: #fff; }
+    .search-input::placeholder { color: var(--text-muted); }
 
-  .page-header h1 span {
-    color: var(--fire);
-  }
+    /* ── CATEGORY TABS ── */
+    .cat-tabs {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+    .cat-tab {
+      flex: 1;
+      padding: 7px 4px;
+      border-radius: 9px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .cat-tab:hover { border-color: var(--gold); color: var(--text); }
+    .cat-tab.active {
+      background: var(--dark);
+      color: var(--gold);
+      border-color: var(--dark);
+    }
 
-  .page-header p {
-    font-size: 15px;
-    color: var(--text-muted);
-    font-weight: 300;
-    margin-top: 0.5rem;
-    letter-spacing: 0.02em;
-  }
+    /* ── TYPE BUTTONS ── */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+    .type-btn {
+      border: 1.5px solid var(--border);
+      border-radius: 11px;
+      padding: 11px 6px 9px;
+      text-align: center;
+      cursor: pointer;
+      background: #fff;
+      font-size: 12.5px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: var(--text);
+      transition: all 0.18s ease;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .type-btn:hover { border-color: var(--gold); background: #fdf9f0; }
+    .type-btn.active {
+      background: var(--dark);
+      color: #fff;
+      border-color: var(--gold);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .type-emoji {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 5px;
+      line-height: 1;
+    }
+    .type-btn-cat {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 3px;
+      opacity: 0.45;
+    }
+    .type-btn.active .type-btn-cat { opacity: 0.6; color: var(--gold); }
 
-  /* CARD */
-  .card {
-    background: #fff;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    padding: 1.75rem 2rem;
-    margin-bottom: 1.25rem;
-  }
+    /* Prázdny stav */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 24px 10px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .no-results span { display: block; font-size: 28px; margin-bottom: 8px; }
 
-  .card-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--fire);
-    margin-bottom: 1.25rem;
-  }
+    /* ── SLIDER SECTION ── */
+    .guest-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+    }
+    .guest-label {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .guest-display {
+      font-size: 38px;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+      cursor: pointer;
+      background: linear-gradient(
+        to right,
+        var(--dark) 0%,
+        var(--dark) var(--fill, 9.4%),
+        #ddd var(--fill, 9.4%),
+        #ddd 100%
+      );
+      margin-bottom: 14px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--dark);
+      border: 3px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--dark);
+      border: 3px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      cursor: pointer;
+    }
+    .guest-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .counter-btn {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      border: 2px solid var(--dark);
+      background: #fff;
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 300;
+      color: var(--dark);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .counter-btn:hover, .counter-btn:active {
+      background: var(--dark); color: #fff;
+    }
+    .guest-num-input {
+      flex: 1;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 6px;
+      outline: none;
+      font-family: inherit;
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .guest-num-input:focus { border-color: var(--gold); }
+    .guest-hint {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
 
-  /* TYPE TABS */
-  .type-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 0;
-  }
+    /* ── RESULT CARDS ── */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .result-tile {
+      border-radius: 12px;
+      padding: 18px 14px;
+      text-align: center;
+    }
+    .result-tile.dark { background: var(--dark); }
+    .result-tile.light { border: 2px solid var(--border); background: #fff; }
+    .result-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .result-tile.dark .result-tag { color: rgba(255,255,255,0.55); }
+    .result-tile.light .result-tag { color: var(--text-muted); }
+    .result-val { font-size: 30px; font-weight: 900; line-height: 1; }
+    .result-tile.dark .result-val { color: #fff; }
+    .result-tile.light .result-val { color: var(--dark); }
+    .result-sub { font-size: 11px; margin-top: 4px; opacity: 0.55; font-weight: 500; }
+    .result-tile.dark .result-sub { color: #fff; }
+    .result-tile.light .result-sub { color: var(--text); }
 
-  .type-btn {
-    padding: 12px 10px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    background: var(--cream);
-    color: var(--text-muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 400;
-    cursor: pointer;
-    transition: all .2s ease;
-    text-align: center;
-    line-height: 1.3;
-  }
+    /* ── SHOPPING LIST ── */
+    .ingredient-list { border-top: 1px solid var(--border); }
+    .ingredient-row {
+      display: flex;
+      align-items: center;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+    }
+    .ingredient-row:last-child { border-bottom: none; }
+    .ing-emoji { font-size: 20px; width: 26px; text-align: center; flex-shrink: 0; }
+    .ing-name { flex: 1; font-size: 14.5px; color: var(--text); }
+    .ing-amount { font-size: 15px; font-weight: 700; color: var(--dark); white-space: nowrap; }
+    .ing-main .ing-name { font-weight: 600; }
+    .ing-main .ing-amount { color: var(--gold); font-size: 16px; }
 
-  .type-btn .icon {
-    display: block;
-    font-size: 20px;
-    margin-bottom: 4px;
-  }
+    /* ── TIPS ── */
+    .tips-box {
+      background: #fdf9f0;
+      border-radius: 10px;
+      border: 1px solid rgba(200,165,90,0.25);
+      padding: 14px 16px;
+      margin-top: 16px;
+    }
+    .tips-box h4 {
+      font-size: 12px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
+    }
+    .tips-box ul { list-style: none; padding: 0; }
+    .tips-box li {
+      font-size: 13px; color: #555; padding: 3px 0 3px 16px;
+      position: relative; line-height: 1.5;
+    }
+    .tips-box li::before { content: '•'; position: absolute; left: 4px; color: var(--gold); }
 
-  .type-btn:hover {
-    border-color: var(--brown-light);
-    color: var(--brown-mid);
-  }
+    /* ── PRINT BUTTON ── */
+    .print-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px; background: var(--dark); color: var(--gold);
+      border: none; border-radius: 12px; font-size: 14px; font-weight: 700;
+      letter-spacing: 0.5px; cursor: pointer; margin-top: 18px;
+      transition: opacity 0.2s; font-family: inherit;
+    }
+    .print-btn:hover { opacity: 0.85; }
+    .print-btn svg { flex-shrink: 0; }
 
-  .type-btn.active {
-    background: var(--fire);
-    border-color: var(--fire);
-    color: #fff;
-    font-weight: 500;
-  }
+    /* ── FAB ── */
+    .fab {
+      position: fixed; bottom: 22px; left: 22px;
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--dark); border: 2px solid var(--gold);
+      color: var(--gold); font-size: 22px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35); z-index: 100;
+      transition: transform 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .fab:hover { transform: scale(1.1); }
+    .fab-tooltip {
+      position: fixed; bottom: 86px; left: 14px;
+      background: var(--dark); color: var(--gold); font-size: 12px; font-weight: 600;
+      padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(200,165,90,0.4);
+      white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .fab:hover + .fab-tooltip { opacity: 1; }
 
-  /* INPUTS */
-  .input-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border);
-  }
+    /* ── PRINT ── */
+    @media print {
+      .fab, .fab-tooltip, .sticky-bar, .print-btn, .type-grid,
+      .slider-section, .search-wrap, .cat-tabs { display: none !important; }
+      .header { padding: 16px; }
+      .card { box-shadow: none !important; border: 1px solid #ddd; margin-bottom: 10px; }
+      body { background: #fff; padding: 0; }
+      .container { padding: 10px; max-width: 100%; }
+    }
 
-  .input-row:last-child { border-bottom: none; }
-
-  .input-label {
-    font-size: 15px;
-    color: var(--text);
-    font-weight: 400;
-  }
-
-  .input-hint {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
-  }
-
-  .stepper {
-    display: flex;
-    align-items: center;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    background: var(--cream);
-  }
-
-  .stepper button {
-    width: 38px;
-    height: 42px;
-    background: none;
-    border: none;
-    color: var(--brown-light);
-    font-size: 18px;
-    cursor: pointer;
-    transition: background .15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .stepper button:hover { background: var(--cream-dark); }
-  .stepper button:active { background: rgba(200,75,17,0.1); color: var(--fire); }
-
-  .stepper input {
-    width: 70px;
-    height: 42px;
-    border: none;
-    border-left: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    background: #fff;
-    text-align: center;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    font-weight: 500;
-    color: var(--text);
-    -moz-appearance: textfield;
-    outline: none;
-  }
-
-  .stepper input::-webkit-outer-spin-button,
-  .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-  /* RESULTS */
-  .metrics-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin-bottom: 1.5rem;
-  }
-
-  @media (max-width: 480px) {
-    .metrics-row { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  .metric {
-    background: var(--cream);
-    border-radius: 10px;
-    padding: 12px 10px;
-    text-align: center;
-  }
-
-  .metric-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--brown-dark);
-    line-height: 1;
-  }
-
-  .metric-num .unit {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--text-muted);
-    margin-left: 2px;
-  }
-
-  .metric-name {
-    font-size: 11px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    margin-top: 4px;
-  }
-
-  /* TABLE */
-  .ing-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-
-  .ing-table thead tr {
-    border-bottom: 1.5px solid var(--border);
-  }
-
-  .ing-table th {
-    text-align: left;
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-muted);
-    padding: 0 0 10px;
-  }
-
-  .ing-table th:last-child { text-align: right; }
-
-  .ing-table td {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-
-  .ing-table td:last-child {
-    text-align: right;
-    font-weight: 500;
-    color: var(--brown-mid);
-  }
-
-  .ing-table tr:last-child td { border-bottom: none; }
-
-  .ing-main td { font-weight: 500; color: var(--brown-dark); }
-  .ing-main td:last-child { color: var(--fire); }
-
-  /* TIP */
-  .tip-box {
-    margin-top: 1.5rem;
-    background: linear-gradient(135deg, #FFF8F0 0%, #FFF0E0 100%);
-    border-left: 3px solid var(--ember);
-    border-radius: 0 10px 10px 0;
-    padding: 14px 16px;
-    font-size: 13.5px;
-    color: var(--brown-mid);
-    line-height: 1.65;
-    font-style: italic;
-  }
-
-  .tip-box strong {
-    font-style: normal;
-    font-weight: 500;
-    color: var(--brown-dark);
-    display: block;
-    margin-bottom: 4px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-family: 'DM Sans', sans-serif;
-  }
-
-  /* FOOTER */
-  .footer {
-    text-align: center;
-    margin-top: 2rem;
-    font-size: 12px;
-    color: var(--text-muted);
-    opacity: 0.7;
-  }
-
-  /* Fade in on load */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .card { animation: fadeUp .4s ease both; }
-  .card:nth-child(1) { animation-delay: 0s; }
-  .card:nth-child(2) { animation-delay: .07s; }
-  .card:nth-child(3) { animation-delay: .14s; }
-  .page-header { animation: fadeUp .3s ease both; }
-</style>
+    /* ── RESPONSIVE ── */
+    @media (max-width: 400px) {
+      .type-grid { grid-template-columns: repeat(2, 1fr); }
+      .header h1 { font-size: 22px; }
+      .cat-tab { font-size: 10px; padding: 6px 2px; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-
-  <header class="page-header">
-    <svg class="flame-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M24 4C24 4 14 16 14 26C14 32 18.5 37 24 37C29.5 37 34 32 34 26C34 16 24 4 24 4Z" fill="#C84B11"/>
-      <path d="M24 14C24 14 18 22 18 28C18 31.3 20.7 34 24 34C27.3 34 30 31.3 30 28C30 22 24 14 24 14Z" fill="#F5A623"/>
-      <path d="M24 22C24 22 21 26 21 29C21 30.7 22.3 32 24 32C25.7 32 27 30.7 27 29C27 26 24 22 24 22Z" fill="#FDF6ED"/>
-    </svg>
-    <h1>Gulášová<br><span>kalkulačka</span></h1>
-    <p>Prepočet ingrediencií na presný počet porcií</p>
-  </header>
-
-  <!-- TYP GULASA -->
-  <div class="card">
-    <div class="card-title">Typ guláša</div>
-    <div class="type-grid" id="type-grid">
-      <button class="type-btn active" data-type="klasicky" onclick="setType(this)">
-        <span class="icon">🐂</span>Klasický hovädzí
-      </button>
-      <button class="type-btn" data-type="bravcovy" onclick="setType(this)">
-        <span class="icon">🐷</span>Bravčový
-      </button>
-      <button class="type-btn" data-type="zverina" onclick="setType(this)">
-        <span class="icon">🦌</span>Zverina
-      </button>
-      <button class="type-btn" data-type="veganski" onclick="setType(this)">
-        <span class="icon">🌿</span>Vegánsky
-      </button>
-    </div>
-  </div>
-
-  <!-- NASTAVENIA -->
-  <div class="card">
-    <div class="card-title">Nastavenia</div>
-
-    <div class="input-row">
-      <div>
-        <div class="input-label">Počet porcií</div>
-        <div class="input-hint">Celkový počet hostí</div>
-      </div>
-      <div class="stepper">
-        <button type="button" onclick="adj('people',-5)">−</button>
-        <input type="number" id="people" value="10" min="1" max="500" oninput="calc()">
-        <button type="button" onclick="adj('people',5)">+</button>
-      </div>
-    </div>
-
-    <div class="input-row">
-      <div>
-        <div class="input-label">Veľkosť porcie</div>
-        <div class="input-hint">Objem jednej porcie v ml</div>
-      </div>
-      <div class="stepper">
-        <button type="button" onclick="adj('portion',-50)">−</button>
-        <input type="number" id="portion" value="350" min="150" max="600" oninput="calc()">
-        <button type="button" onclick="adj('portion',50)">+</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- VYSLEDKY -->
-  <div class="card">
-    <div class="card-title">Výsledky</div>
-
-    <div class="metrics-row">
-      <div class="metric">
-        <div class="metric-num" id="r-total">—<span class="unit">l</span></div>
-        <div class="metric-name">Celkový objem</div>
-      </div>
-      <div class="metric">
-        <div class="metric-num" id="r-meat">—<span class="unit">kg</span></div>
-        <div class="metric-name">Mäso / základ</div>
-      </div>
-      <div class="metric">
-        <div class="metric-num" id="r-onion">—<span class="unit">kg</span></div>
-        <div class="metric-name">Cibuľa</div>
-      </div>
-      <div class="metric">
-        <div class="metric-num" id="r-water">—<span class="unit">l</span></div>
-        <div class="metric-name">Vývar / voda</div>
-      </div>
-    </div>
-
-    <table class="ing-table">
-      <thead>
-        <tr>
-          <th>Ingrediencia</th>
-          <th>Množstvo</th>
-        </tr>
-      </thead>
-      <tbody id="ing-body"></tbody>
-    </table>
-
-    <div class="tip-box" id="tip-box">
-      <strong>Kuchársky tip</strong>
-      <span id="tip-text"></span>
-    </div>
-  </div>
-
-  <div class="footer">Gulášová centrála &mdash; kalkulačka ingrediencií</div>
-
+<!-- STICKY BAR -->
+<div class="sticky-bar" id="stickyBar">
+  <span class="sticky-name" id="stickyName">Hovädzí guláš</span>
+  <span class="sticky-info" id="stickyInfo">15 hostí · 10 L</span>
 </div>
 
+<!-- HEADER -->
+<div class="header">
+  <div class="header-tag">🫕 Kotlík na guláš</div>
+  <h1><span>Gulášová </span>Kalkulačka</h1>
+  <p>Presné množstvá surovín pre každý počet hostí</p>
+</div>
+
+<div class="container">
+
+  <!-- TYP GULÁŠU -->
+  <div class="card">
+    <div class="card-title">🍽 Typ gulášu</div>
+
+    <!-- SEARCH -->
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" class="search-input" id="recipeSearch"
+             placeholder="Hľadať recept..." autocomplete="off" spellcheck="false">
+    </div>
+
+    <!-- KATEGÓRIE -->
+    <div class="cat-tabs" id="catTabs">
+      <button class="cat-tab active" data-cat="all">🍽 Všetky</button>
+      <button class="cat-tab" data-cat="gulas">🥩 Guláše</button>
+      <button class="cat-tab" data-cat="polievka">🍲 Polievky</button>
+      <button class="cat-tab" data-cat="medzinarodne">🌍 Svet</button>
+    </div>
+
+    <div class="type-grid" id="typeGrid"></div>
+  </div>
+
+  <!-- POČET HOSTÍ -->
+  <div class="card slider-section">
+    <div class="guest-row">
+      <span class="guest-label">Počet hostí:</span>
+      <span class="guest-display" id="guestDisplay">15</span>
+    </div>
+    <input type="range" id="guestSlider" min="1" max="150" value="15" step="1">
+    <div class="guest-controls">
+      <button class="counter-btn" id="btnMinus" aria-label="Menej">−</button>
+      <input type="number" class="guest-num-input" id="guestInput" min="1" max="999" value="15">
+      <button class="counter-btn" id="btnPlus" aria-label="Viac">+</button>
+    </div>
+    <p class="guest-hint">Posuvník 1–150 · zadajte ľubovoľné číslo do políčka</p>
+  </div>
+
+  <!-- VÝSLEDKY -->
+  <div class="card">
+    <div class="results-grid">
+      <div class="result-tile dark">
+        <div class="result-tag">🫕 Kotlík</div>
+        <div class="result-val" id="potSize">10 L</div>
+        <div class="result-sub">odporúčaná veľkosť</div>
+      </div>
+      <div class="result-tile light">
+        <div class="result-tag" id="meatTag">🥩 Glejka</div>
+        <div class="result-val" id="meatVal">3.4 kg</div>
+        <div class="result-sub" id="meatSub">množstvo mäsa</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NÁKUPNÝ ZOZNAM -->
+  <div class="card">
+    <div class="card-title">🛒 Nákupný zoznam</div>
+    <div class="ingredient-list" id="ingredientList"></div>
+    <div class="tips-box" id="tipsBox"></div>
+    <button class="print-btn" onclick="window.print()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 6 2 18 2 18 9"/>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
+      </svg>
+      Vytlačiť nákupný zoznam
+    </button>
+  </div>
+
+</div><!-- /container -->
+
+<button class="fab" id="fab" title="Na začiatok">🧮</button>
+<div class="fab-tooltip">Gulášová kalkulačka</div>
+
 <script>
+/* ══════════════════════════════════════════════════════════
+   RECEPTY  —  cat: 'gulas' | 'polievka' | 'medzinarodne'
+══════════════════════════════════════════════════════════ */
 const RECIPES = {
-  klasicky: {
-    meatLabel: "Hovädzie (pliecko / kríž)",
-    perLiter: {
-      meat: 0.28, onion: 0.22, water: 0.85,
-      extras: [
-        {n:"Paradajkový pretlak", v:0.040, u:"kg"},
-        {n:"Paprika mletá sladká",  v:6,     u:"g"},
-        {n:"Paprika mletá pálivá",  v:2,     u:"g"},
-        {n:"Rasca celá",            v:3,     u:"g"},
-        {n:"Cesnak",                v:2,     u:"strúčiky"},
-        {n:"Olej / masť",           v:0.030, u:"l"},
-        {n:"Soľ, čierne korenie",   v:null,  u:"podľa chuti"},
-      ]
-    },
-    tip: "Cibuľu opraž na masti alebo oleji úplne dozlatista – to je základ chuti. Mäso nakrájaj na kocky 3×3 cm a opečie ho na vysokej teplote pred dusením."
+
+  /* ─── GULÁŠE ─────────────────────────────────── */
+  hovadzi: {
+    name: "Hovädzí guláš", emoji: "🥩", cat: "gulas",
+    meatTag: "🥩 Glejka", meatSub: "množstvo mäsa",
+    ingredients: [
+      { name: "Hovädzie mäso",        emoji: "🥩", per: 225,   unit: "g",  main: true  },
+      { name: "Cibuľa",               emoji: "🧅", per: 202.5, unit: "g"               },
+      { name: "Zemiaky",              emoji: "🥔", per: 146,   unit: "g"               },
+      { name: "Voda",                 emoji: "💧", per: 191.3, unit: "ml"              },
+      { name: "Masť",                 emoji: "🫙", per: 18,    unit: "g",  noConvert: true },
+      { name: "Paprika mletá sladká", emoji: "🌶️", per: 15,   unit: "g"               },
+      { name: "Cesnak",               emoji: "🧄", per: 5,     unit: "g"               },
+      { name: "Soľ",                  emoji: "🧂", per: 8,     unit: "g"               },
+      { name: "Rasca",                emoji: "🌿", per: 2,     unit: "g"               },
+      { name: "Majoránka",            emoji: "🌱", per: 1,     unit: "g"               },
+      { name: "Paradajkový pretlak",  emoji: "🍅", per: 20,    unit: "g"               },
+    ],
+    tips: [
+      "Mäso nakrájajte na kocky 3–4 cm, cibuľu na prúžky.",
+      "Cibuľu osmažte do zlatista na masti pred pridaním mäsa.",
+      "Pridajte papriku vždy odstavený od ohňa — nezhorí.",
+      "Guláš je najlepší na druhý deň po odstavení.",
+    ]
   },
-  bravcovy: {
-    meatLabel: "Bravčové (krkovička / pliecko)",
-    perLiter: {
-      meat: 0.26, onion: 0.20, water: 0.80,
-      extras: [
-        {n:"Červená paprika čerstvá", v:0.05,  u:"kg"},
-        {n:"Paradajkový pretlak",     v:0.035, u:"kg"},
-        {n:"Paprika mletá",           v:6,     u:"g"},
-        {n:"Majorán",                 v:3,     u:"g"},
-        {n:"Cesnak",                  v:2,     u:"strúčiky"},
-        {n:"Olej",                    v:0.03,  u:"l"},
-        {n:"Soľ, čierne korenie",     v:null,  u:"podľa chuti"},
-      ]
-    },
-    tip: "Bravčové sa varí rýchlejšie ako hovädzie — postačí 1–1,5 hod. dusenia. Červená čerstvá paprika pridá farbu a sladkosť."
+
+  bravovy: {
+    name: "Bravčový guláš", emoji: "🐷", cat: "gulas",
+    meatTag: "🥩 Mäso", meatSub: "množstvo mäsa",
+    ingredients: [
+      { name: "Bravčové pliecko",      emoji: "🥩", per: 220,  unit: "g",  main: true  },
+      { name: "Cibuľa",               emoji: "🧅", per: 185,  unit: "g"               },
+      { name: "Zemiaky",              emoji: "🥔", per: 150,  unit: "g"               },
+      { name: "Čerstvá paprika",       emoji: "🫑", per: 35,   unit: "g"               },
+      { name: "Voda",                 emoji: "💧", per: 185,  unit: "ml"              },
+      { name: "Masť",                 emoji: "🫙", per: 15,   unit: "g",  noConvert: true },
+      { name: "Paprika mletá sladká", emoji: "🌶️", per: 15,  unit: "g"               },
+      { name: "Cesnak",               emoji: "🧄", per: 5,    unit: "g"               },
+      { name: "Soľ",                  emoji: "🧂", per: 8,    unit: "g"               },
+      { name: "Rasca",                emoji: "🌿", per: 2,    unit: "g"               },
+      { name: "Paradajkový pretlak",  emoji: "🍅", per: 15,   unit: "g"               },
+    ],
+    tips: [
+      "Pliecko je ideálne — má dosť tuku, je šťavnaté aj po dlhom varení.",
+      "Čerstvú papriku pridajte ku koncu varenia pre svieží chuť.",
+      "Bravčový guláš je hotový rýchlejšie ako hovädzí — cca 60–80 min.",
+    ]
   },
-  zverina: {
-    meatLabel: "Zverina (jeleň, diviak, srnec)",
-    perLiter: {
-      meat: 0.30, onion: 0.20, water: 0.90,
-      extras: [
-        {n:"Červené víno",       v:0.08, u:"l"},
-        {n:"Brusnicový džem",    v:0.03, u:"kg"},
-        {n:"Bobkový list",       v:1,    u:"ks"},
-        {n:"Nové korenie",       v:3,    u:"ks"},
-        {n:"Cesnak",             v:3,    u:"strúčiky"},
-        {n:"Tymian čerstvý",     v:3,    u:"g"},
-        {n:"Olej / slanina",     v:0.03, u:"l"},
-      ]
-    },
-    tip: "Zverinu odporúčam marinovať 24 hodín v červenom víne s bylinkami. Víno pridaj aj počas varenia — dá mäsu hĺbku a odstraňuje divokú vôňu."
+
+  divinovy: {
+    name: "Divinový guláš", emoji: "🦌", cat: "gulas",
+    meatTag: "🦌 Divina", meatSub: "množstvo mäsa",
+    ingredients: [
+      { name: "Divinové mäso",        emoji: "🦌", per: 250,  unit: "g",  main: true  },
+      { name: "Cibuľa",               emoji: "🧅", per: 180,  unit: "g"               },
+      { name: "Červené víno",         emoji: "🍷", per: 50,   unit: "ml"              },
+      { name: "Voda",                 emoji: "💧", per: 140,  unit: "ml"              },
+      { name: "Masť",                 emoji: "🫙", per: 20,   unit: "g",  noConvert: true },
+      { name: "Paprika mletá",        emoji: "🌶️", per: 12,  unit: "g"               },
+      { name: "Brusnicový džem",      emoji: "🫐", per: 15,   unit: "g"               },
+      { name: "Sušené huby",         emoji: "🍄", per: 3,    unit: "g"               },
+      { name: "Cesnak",               emoji: "🧄", per: 5,    unit: "g"               },
+      { name: "Soľ",                  emoji: "🧂", per: 8,    unit: "g"               },
+      { name: "Nové korenie",         emoji: "🌰", per: 2,    unit: "g"               },
+      { name: "Bobkový list",         emoji: "🍃", per: 0.3,  unit: "ks", isCount: true },
+    ],
+    tips: [
+      "Divinu marinujte aspoň 12 hodín v červenom víne so zeleninou.",
+      "Čím dlhšie varíte (2–3 hod.), tým je mäso mäkšie a voňavejšie.",
+      "Brusnicový džem dodá guláš jemnú sladkosť — pridajte ku koncu.",
+    ]
   },
-  veganski: {
-    meatLabel: "Seitan / šampiňóny / šošovica",
-    perLiter: {
-      meat: 0.22, onion: 0.25, water: 0.88,
-      extras: [
-        {n:"Červená paprika",         v:0.07, u:"kg"},
-        {n:"Paradajky lúpané (plech)",v:0.08, u:"kg"},
-        {n:"Paprika mletá sladká",    v:7,    u:"g"},
-        {n:"Kmín (rímska rasca)",     v:3,    u:"g"},
-        {n:"Cesnak",                  v:3,    u:"strúčiky"},
-        {n:"Olej",                    v:0.03, u:"l"},
-        {n:"Soľ, čierne korenie",     v:null, u:"podľa chuti"},
-      ]
-    },
-    tip: "Seitan pridaj až v posledných 20 minútach, aby sa nerozpadol. Sušené šampiňóny dajú guláši prirodzenú umami hĺbku."
+
+  fazulovy: {
+    name: "Fazuľový guláš", emoji: "🫘", cat: "gulas",
+    meatTag: "🌭 Klobása", meatSub: "množstvo mäsa",
+    ingredients: [
+      { name: "Klobása / údené mäso", emoji: "🌭", per: 90,   unit: "g",  main: true  },
+      { name: "Fazuľa biela (suchá)", emoji: "🫘", per: 100,  unit: "g"               },
+      { name: "Cibuľa",               emoji: "🧅", per: 150,  unit: "g"               },
+      { name: "Zemiaky",              emoji: "🥔", per: 120,  unit: "g"               },
+      { name: "Voda",                 emoji: "💧", per: 230,  unit: "ml"              },
+      { name: "Masť",                 emoji: "🫙", per: 15,   unit: "g",  noConvert: true },
+      { name: "Paprika mletá sladká", emoji: "🌶️", per: 10,  unit: "g"               },
+      { name: "Cesnak",               emoji: "🧄", per: 5,    unit: "g"               },
+      { name: "Soľ",                  emoji: "🧂", per: 6,    unit: "g"               },
+      { name: "Rasca",                emoji: "🌿", per: 2,    unit: "g"               },
+      { name: "Majoránka",            emoji: "🌱", per: 1,    unit: "g"               },
+    ],
+    tips: [
+      "Fazuľu namočte na noc, ráno prepláchnite a uvarte zvlášť.",
+      "Údené mäso / rebrá dodajú vývar silnú chuť.",
+      "Guláš zahustite rozdrobenou varený fazuľou.",
+    ]
+  },
+
+  vegan: {
+    name: "Vegán guláš", emoji: "🍄", cat: "gulas",
+    meatTag: "🥦 Zelenina", meatSub: "celková zelenina",
+    ingredients: [
+      { name: "Šampiňóny",           emoji: "🍄", per: 110,  unit: "g",  main: true, isVeg: true },
+      { name: "Paprika (zelenina)",  emoji: "🫑", per: 80,   unit: "g",  isVeg: true },
+      { name: "Cuketa",              emoji: "🥒", per: 80,   unit: "g",  isVeg: true },
+      { name: "Cibuľa",              emoji: "🧅", per: 150,  unit: "g"               },
+      { name: "Zemiaky",             emoji: "🥔", per: 150,  unit: "g"               },
+      { name: "Paradajky",           emoji: "🍅", per: 60,   unit: "g"               },
+      { name: "Voda",                emoji: "💧", per: 200,  unit: "ml"              },
+      { name: "Olej",                emoji: "🫙", per: 15,   unit: "ml"              },
+      { name: "Paprika mletá",       emoji: "🌶️", per: 12,  unit: "g"               },
+      { name: "Cesnak",              emoji: "🧄", per: 5,    unit: "g"               },
+      { name: "Soľ",                 emoji: "🧂", per: 8,    unit: "g"               },
+      { name: "Rasca",               emoji: "🌿", per: 2,    unit: "g"               },
+      { name: "Sójová omáčka",       emoji: "🍶", per: 5,    unit: "ml"              },
+    ],
+    tips: [
+      "Šampiňóny osmažte na sucho — pustia vodu a zintenzívnia chuť.",
+      "Zeleninu pridávajte podľa doby varenia: tvrdú skôr, mäkkú neskôr.",
+      "Sójová omáčka dodá umami a hĺbku chuti.",
+    ]
+  },
+
+  taliansky: {
+    name: "Taliansky guláš", emoji: "🇮🇹", cat: "medzinarodne",
+    meatTag: "🥩 Mäso", meatSub: "množstvo mäsa",
+    ingredients: [
+      { name: "Hovädzie / teľacie mäso",  emoji: "🥩", per: 220,  unit: "g",  main: true  },
+      { name: "Cibuľa",                   emoji: "🧅", per: 100,  unit: "g"               },
+      { name: "Cesnak",                   emoji: "🧄", per: 8,    unit: "g"               },
+      { name: "Paradajky krájané",        emoji: "🍅", per: 180,  unit: "g"               },
+      { name: "Červené víno",             emoji: "🍷", per: 60,   unit: "ml"              },
+      { name: "Hovädzí vývar",            emoji: "💧", per: 120,  unit: "ml"              },
+      { name: "Olivový olej",             emoji: "🫙", per: 12,   unit: "ml"              },
+      { name: "Čerstvá paprika",          emoji: "🫑", per: 50,   unit: "g"               },
+      { name: "Cuketa",                   emoji: "🥒", per: 40,   unit: "g"               },
+      { name: "Soľ",                      emoji: "🧂", per: 6,    unit: "g"               },
+      { name: "Čierne korenie",           emoji: "🌿", per: 2,    unit: "g"               },
+      { name: "Sušená bazalka",           emoji: "🌱", per: 2,    unit: "g"               },
+      { name: "Sušené oregano",           emoji: "🌿", per: 1,    unit: "g"               },
+      { name: "Parmezán (podávanie)",     emoji: "🧀", per: 15,   unit: "g"               },
+    ],
+    tips: [
+      "Mäso opečte na olivovom oleji do tmavohnedej kôrky — základ chuti.",
+      "Červené víno nechajte odpariť 2–3 minúty pred pridaním paradajok.",
+      "Taliansky guláš (spezzatino) sa podáva s polentou alebo ciabattou.",
+      "Parmezán nastrúhajte čerstvý až pri podávaní — nikdy z vrecúška.",
+    ]
+  },
+
+  /* ─── POLIEVKY ───────────────────────────────── */
+  kapustnica: {
+    name: "Kapustnica", emoji: "🥬", cat: "polievka",
+    meatTag: "🌭 Mäso", meatSub: "množstvo mäsa",
+    ingredients: [
+      { name: "Klobása / údené rebrá", emoji: "🌭", per: 85,   unit: "g",  main: true  },
+      { name: "Kyslá kapusta",         emoji: "🥬", per: 150,  unit: "g"               },
+      { name: "Zemiaky",               emoji: "🥔", per: 100,  unit: "g"               },
+      { name: "Cibuľa",               emoji: "🧅", per: 80,   unit: "g"               },
+      { name: "Sušené huby",           emoji: "🍄", per: 5,    unit: "g"               },
+      { name: "Slanina",               emoji: "🥓", per: 20,   unit: "g"               },
+      { name: "Voda",                  emoji: "💧", per: 250,  unit: "ml"              },
+      { name: "Masť",                  emoji: "🫙", per: 12,   unit: "g",  noConvert: true },
+      { name: "Paprika mletá",         emoji: "🌶️", per: 8,   unit: "g"               },
+      { name: "Cesnak",                emoji: "🧄", per: 5,    unit: "g"               },
+      { name: "Soľ",                   emoji: "🧂", per: 4,    unit: "g"               },
+      { name: "Majoránka",             emoji: "🌱", per: 2,    unit: "g"               },
+    ],
+    tips: [
+      "Kapustnicu uvarte na Štedrý večer — na druhý deň chutí najlepšie.",
+      "Kyslá kapusta dá polievke kyslú chuť — nepresoľujte zbytočne.",
+      "Sušené huby namočte hodinu dopredu, vodu pridajte aj do polievky.",
+    ]
+  },
+
+  drzková: {
+    name: "Držková polievka", emoji: "🍖", cat: "polievka",
+    meatTag: "🍖 Držky", meatSub: "množstvo držiek",
+    ingredients: [
+      { name: "Predvarené držky",       emoji: "🍖", per: 120,  unit: "g",  main: true  },
+      { name: "Cibuľa",                emoji: "🧅", per: 80,   unit: "g"               },
+      { name: "Mrkva",                  emoji: "🥕", per: 50,   unit: "g"               },
+      { name: "Petržlenový koreň",      emoji: "🌿", per: 30,   unit: "g"               },
+      { name: "Zeler",                  emoji: "🌱", per: 20,   unit: "g"               },
+      { name: "Voda / vývar",           emoji: "💧", per: 300,  unit: "ml"              },
+      { name: "Masť",                   emoji: "🫙", per: 15,   unit: "g",  noConvert: true },
+      { name: "Múka (na zahustenie)",   emoji: "🌾", per: 10,   unit: "g"               },
+      { name: "Paprika mletá sladká",   emoji: "🌶️", per: 8,   unit: "g"               },
+      { name: "Cesnak",                 emoji: "🧄", per: 5,    unit: "g"               },
+      { name: "Soľ",                    emoji: "🧂", per: 6,    unit: "g"               },
+      { name: "Rasca",                  emoji: "🫚", per: 2,    unit: "g"               },
+      { name: "Majoránka",             emoji: "🌱", per: 2,    unit: "g"               },
+    ],
+    tips: [
+      "Držky varte vopred 2–3 hodiny do mäkka, potom nakrájajte na prúžky.",
+      "Polievku zahustite zápražkou (masť + múka) pre krémovú konzistenciu.",
+      "Rasca a majoránka sú kľúčové — nezabudnite ani na jedno.",
+      "Podávajte s chrumkavým chlebom a kyslou uhorkou.",
+    ]
+  },
+
+  frankfurtska: {
+    name: "Frankfurtská polievka", emoji: "🌭", cat: "polievka",
+    meatTag: "🌭 Párky", meatSub: "množstvo párkov",
+    ingredients: [
+      { name: "Frankfurtské párky",   emoji: "🌭", per: 80,   unit: "g",  main: true  },
+      { name: "Zemiaky",              emoji: "🥔", per: 130,  unit: "g"               },
+      { name: "Mrkva",                emoji: "🥕", per: 50,   unit: "g"               },
+      { name: "Zeler (koreň)",        emoji: "🌱", per: 25,   unit: "g"               },
+      { name: "Petržlenový koreň",    emoji: "🌿", per: 20,   unit: "g"               },
+      { name: "Cibuľa",               emoji: "🧅", per: 60,   unit: "g"               },
+      { name: "Voda / vývar",         emoji: "💧", per: 280,  unit: "ml"              },
+      { name: "Masť / maslo",         emoji: "🫙", per: 10,   unit: "g",  noConvert: true },
+      { name: "Múka (zahustenie)",    emoji: "🌾", per: 8,    unit: "g"               },
+      { name: "Soľ",                  emoji: "🧂", per: 5,    unit: "g"               },
+      { name: "Čierne korenie",       emoji: "🌶️", per: 1,   unit: "g"               },
+      { name: "Majoránka",            emoji: "🌱", per: 1,    unit: "g"               },
+      { name: "Kyslá smotana",        emoji: "🥛", per: 25,   unit: "g"               },
+    ],
+    tips: [
+      "Zeleninu uvarte do mäkka, párky pridajte až ku koncu (5 min).",
+      "Polievku zahustite zápražkou z masla a múky pre krémovú štruktúru.",
+      "Kyslá smotana sa pridáva do taniera, nie do hrnca — zachová farbu.",
+      "Podávajte s chrumkavým bielym pečivom alebo rožkami.",
+    ]
+  },
+
+  /* ─── MEDZINÁRODNÉ ───────────────────────────── */
+  halaszle: {
+    name: "Halászlé", emoji: "🐟", cat: "medzinarodne",
+    meatTag: "🐟 Ryba", meatSub: "množstvo ryby",
+    ingredients: [
+      { name: "Kapor / šťuka (čistená)", emoji: "🐟", per: 200,  unit: "g",  main: true  },
+      { name: "Cibuľa",                  emoji: "🧅", per: 100,  unit: "g"               },
+      { name: "Čerstvá paprika",         emoji: "🫑", per: 40,   unit: "g"               },
+      { name: "Paradajky",               emoji: "🍅", per: 30,   unit: "g"               },
+      { name: "Voda",                    emoji: "💧", per: 300,  unit: "ml"              },
+      { name: "Paprika mletá ostrá",     emoji: "🌶️", per: 10,  unit: "g"               },
+      { name: "Paprika mletá sladká",    emoji: "🫑", per: 8,    unit: "g"               },
+      { name: "Olej",                    emoji: "🫙", per: 10,   unit: "ml"              },
+      { name: "Soľ",                     emoji: "🧂", per: 8,    unit: "g"               },
+    ],
+    tips: [
+      "Základ: uvarte kosti a hlavy ryby 1 hodinu — základ chuti je vo vývare.",
+      "Paprika mletá ostrá je povinná — autentické halászlé je výrazne pikantné.",
+      "Rybie filety pridajte až ku koncu (10–15 min) — nesmú sa rozpadnúť.",
+      "Tradične sa podáva s tarhoňou (ryžovitá cestovina).",
+    ]
+  },
+
+  borsc: {
+    name: "Boršč", emoji: "🥣", cat: "medzinarodne",
+    meatTag: "🥩 Mäso", meatSub: "množstvo mäsa",
+    ingredients: [
+      { name: "Hovädzie mäso (s kosťou)", emoji: "🥩", per: 110,  unit: "g",  main: true  },
+      { name: "Cvikla (červená repa)",    emoji: "🫐", per: 150,  unit: "g"               },
+      { name: "Kapusta biela",            emoji: "🥬", per: 100,  unit: "g"               },
+      { name: "Zemiaky",                  emoji: "🥔", per: 120,  unit: "g"               },
+      { name: "Mrkva",                    emoji: "🥕", per: 60,   unit: "g"               },
+      { name: "Cibuľa",                   emoji: "🧅", per: 80,   unit: "g"               },
+      { name: "Paradajkový pretlak",      emoji: "🍅", per: 25,   unit: "g"               },
+      { name: "Voda / vývar",             emoji: "💧", per: 280,  unit: "ml"              },
+      { name: "Masť / olej",              emoji: "🫙", per: 12,   unit: "g",  noConvert: true },
+      { name: "Cesnak",                   emoji: "🧄", per: 5,    unit: "g"               },
+      { name: "Soľ",                      emoji: "🧂", per: 6,    unit: "g"               },
+      { name: "Ocot",                     emoji: "🍶", per: 10,   unit: "ml"              },
+      { name: "Kyslá smotana (podávanie)",emoji: "🥛", per: 30,   unit: "g"               },
+    ],
+    tips: [
+      "Cviklu opečte na oleji so štipkou octu — zachová sýtu farbu.",
+      "Mäso varte 1.5–2 hod. vopred, vývar použite ako základ polievky.",
+      "Boršč je výrazne lepší na druhý deň — chute sa prelejú.",
+      "Podávajte s kyslou smotanou a čiernym chlebom.",
+    ]
   }
 };
 
-let currentType = "klasicky";
+/* Kategórie — badge texty pre tlačidlá */
+const CAT_BADGE = {
+  gulas:        'guláš',
+  polievka:     'polievka',
+  medzinarodne: 'svet',
+};
 
-function setType(btn) {
-  document.querySelectorAll(".type-btn").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  currentType = btn.dataset.type;
-  calc();
+const POT_SIZES = [5, 10, 15, 20, 30, 40, 60, 80, 100];
+
+/* ── STATE ── */
+let currentType = 'hovadzi';
+let guests      = 15;
+let activeCat   = 'all';
+let searchQuery = '';
+
+/* ── HELPERS ── */
+function getPotSize(n) {
+  const needed = (n / 15) * 10;
+  return POT_SIZES.find(s => s >= needed - 0.01) || 100;
 }
 
-function adj(id, delta) {
-  const el = document.getElementById(id);
-  const limits = id === "people" ? [1, 500] : [150, 600];
-  el.value = Math.max(limits[0], Math.min(limits[1], (parseInt(el.value) || 0) + delta));
-  calc();
+function fmt(value, unit, noConvert) {
+  if (unit === 'ks') return Math.ceil(value) + ' ks';
+  if (!noConvert && unit === 'g'  && value >= 1000) return (value / 1000).toFixed(1) + ' kg';
+  if (!noConvert && unit === 'ml' && value >= 1000) return (value / 1000).toFixed(1) + ' L';
+  return Math.round(value) + ' ' + unit;
 }
 
-function fmt(v, dec) {
-  if (v === null) return "—";
-  const n = parseFloat(v.toFixed(dec));
-  return n % 1 === 0 ? n.toString() : n.toString();
+function getMeatTotal(recipe, n) {
+  const main = recipe.ingredients.find(i => i.main);
+  if (!main) return '—';
+  if (recipe.name === 'Vegán guláš') {
+    const total = recipe.ingredients.filter(i => i.isVeg || i.main).reduce((s, i) => s + i.per * n, 0);
+    return fmt(total, 'g');
+  }
+  return fmt(main.per * n, main.unit);
 }
 
-function calc() {
-  const people  = Math.max(1, parseInt(document.getElementById("people").value)  || 1);
-  const portion = Math.max(150, parseInt(document.getElementById("portion").value) || 350);
+/* Normalizácia — odstráni diakritiku pre vyhľadávanie */
+function norm(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+/* ── FILTER ── */
+function filteredKeys() {
+  const q = norm(searchQuery.trim());
+  return Object.entries(RECIPES)
+    .filter(([, r]) => {
+      const catOk  = activeCat === 'all' || r.cat === activeCat;
+      const nameOk = !q || norm(r.name).includes(q);
+      return catOk && nameOk;
+    })
+    .map(([k]) => k);
+}
+
+/* ── RENDER VÝSLEDKY ── */
+function render() {
   const r   = RECIPES[currentType];
-  const pl  = r.perLiter;
-  const lit = (people * portion) / 1000;
+  const pot = getPotSize(guests);
 
-  const meat  = lit * pl.meat;
-  const onion = lit * pl.onion;
-  const water = lit * pl.water;
+  document.getElementById('guestDisplay').textContent = guests;
+  document.getElementById('potSize').textContent      = pot + ' L';
+  document.getElementById('meatTag').textContent      = r.meatTag;
+  document.getElementById('meatVal').textContent      = getMeatTotal(r, guests);
+  document.getElementById('meatSub').textContent      = r.meatSub;
 
-  const setM = (id, val, unit, dec) => {
-    document.getElementById(id).innerHTML =
-      fmt(val, dec) + `<span class="unit">${unit}</span>`;
-  };
+  const pct = Math.min(((guests - 1) / 149) * 100, 100).toFixed(2);
+  document.getElementById('guestSlider').style.setProperty('--fill', pct + '%');
+  document.getElementById('guestSlider').value = Math.min(guests, 150);
 
-  setM("r-total", lit,   "l",  1);
-  setM("r-meat",  meat,  "kg", 2);
-  setM("r-onion", onion, "kg", 2);
-  setM("r-water", water, "l",  1);
+  document.getElementById('stickyName').textContent = r.emoji + ' ' + r.name;
+  document.getElementById('stickyInfo').textContent = guests + ' hostí · ' + pot + ' L';
 
-  const rows = [
-    {n: r.meatLabel,       v: meat,  u:"kg", dec:2, main:true},
-    {n: "Cibuľa",          v: onion, u:"kg", dec:2, main:true},
-    {n: "Vývar / voda",    v: water, u:"l",  dec:1, main:true},
-  ];
+  document.getElementById('ingredientList').innerHTML = r.ingredients.map(ing => {
+    const total  = ing.per * guests;
+    const amount = ing.isCount ? fmt(total, 'ks') : fmt(total, ing.unit, ing.noConvert);
+    return `<div class="${ing.main ? 'ingredient-row ing-main' : 'ingredient-row'}">
+      <span class="ing-emoji">${ing.emoji}</span>
+      <span class="ing-name">${ing.name}</span>
+      <span class="ing-amount">${amount}</span>
+    </div>`;
+  }).join('');
 
-  pl.extras.forEach(e => {
-    if (e.v === null) {
-      rows.push({n: e.n, v: null, u: e.u, dec: 0, main: false});
-    } else {
-      const isCount = ["g","ks","strúčiky"].includes(e.u);
-      const scaled  = lit * e.v;
-      rows.push({n: e.n, v: scaled, u: e.u, dec: isCount ? 0 : 2, main: false});
-    }
-  });
-
-  document.getElementById("ing-body").innerHTML = rows.map(row => {
-    const val = row.v === null ? "—" : fmt(row.v, row.dec) + " " + row.u;
-    const cls = row.main ? ' class="ing-main"' : '';
-    return `<tr${cls}><td>${row.n}</td><td>${val}</td></tr>`;
-  }).join("");
-
-  document.getElementById("tip-text").textContent = RECIPES[currentType].tip;
+  document.getElementById('tipsBox').innerHTML =
+    '<h4>💡 Tip od kuchára</h4><ul>' +
+    r.tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
 }
 
-calc();
+/* ── RENDER GRID RECEPTOV ── */
+function buildGrid() {
+  const grid = document.getElementById('typeGrid');
+  const keys = filteredKeys();
+
+  if (keys.length === 0) {
+    grid.innerHTML = `<div class="no-results"><span>🔍</span>Žiadne recepty nenájdené</div>`;
+    return;
+  }
+
+  // Ak aktuálny recept nie je vo filtri, prepneme na prvý
+  if (!keys.includes(currentType)) {
+    currentType = keys[0];
+    render();
+  }
+
+  grid.innerHTML = keys.map(key => {
+    const r = RECIPES[key];
+    return `<button class="type-btn${key === currentType ? ' active' : ''}" data-key="${key}">
+      <span class="type-emoji">${r.emoji}</span>${r.name}
+      <span class="type-btn-cat">${CAT_BADGE[r.cat] || ''}</span>
+    </button>`;
+  }).join('');
+
+  // Jeden event listener na celý grid (event delegation)
+  grid.onclick = e => {
+    const btn = e.target.closest('.type-btn');
+    if (!btn) return;
+    currentType = btn.dataset.key;
+    grid.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  };
+}
+
+/* ── CATEGORY TABS ── */
+document.getElementById('catTabs').addEventListener('click', e => {
+  const tab = e.target.closest('.cat-tab');
+  if (!tab) return;
+  activeCat = tab.dataset.cat;
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.toggle('active', t === tab));
+  buildGrid();
+});
+
+/* ── SEARCH ── */
+document.getElementById('recipeSearch').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  buildGrid();
+});
+
+/* ── GUESTS ── */
+function setGuests(n) {
+  guests = Math.max(1, Math.min(999, Math.round(Number(n)) || 1));
+  document.getElementById('guestInput').value = guests;
+  render();
+}
+
+document.getElementById('guestSlider').addEventListener('input', e => setGuests(e.target.value));
+document.getElementById('guestInput').addEventListener('change', e => setGuests(e.target.value));
+document.getElementById('guestInput').addEventListener('blur',   e => setGuests(e.target.value || guests));
+document.getElementById('btnMinus').addEventListener('click', () => setGuests(guests - 1));
+document.getElementById('btnPlus').addEventListener('click',  () => setGuests(guests + 1));
+
+/* ── STICKY + FAB ── */
+window.addEventListener('scroll', () => {
+  document.getElementById('stickyBar').classList.toggle('show', window.scrollY > 160);
+}, { passive: true });
+
+document.getElementById('fab').addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ── INIT ── */
+buildGrid();
+render();
+
+/* ══════════════════════════════════════════════════════════
+   AUTO-RESIZE PRE IFRAME EMBED (mobile fix)
+   Posiela výšku stránky do parent okna cez postMessage.
+   Parent iframe potom nastaví svoju výšku podľa obsahu —
+   žiadny scroll vnútri iframu, žiadny mobile problém.
+══════════════════════════════════════════════════════════ */
+(function () {
+  if (window.parent === window) return; // nie sme v iframi
+
+  var lastH = 0;
+
+  function sendHeight() {
+    var h = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.offsetHeight
+    );
+    if (h !== lastH) {
+      lastH = h;
+      window.parent.postMessage({ type: 'gk-resize', height: h }, '*');
+    }
+  }
+
+  // Sleduj zmeny veľkosti obsahu
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(sendHeight).observe(document.body);
+  }
+
+  // Záloha: interval pre staré prehliadače
+  setInterval(sendHeight, 400);
+
+  // Prvé odoslanie po načítaní
+  window.addEventListener('load', sendHeight);
+  sendHeight();
+})();
 </script>
 </body>
 </html>
